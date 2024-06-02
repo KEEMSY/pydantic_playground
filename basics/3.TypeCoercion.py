@@ -7,3 +7,62 @@ Pydantic deserialize(역직렬화) 를 진행할 때, 유효성 검사(데이터
   - 관련 공식문서: https://docs.pydantic.dev/latest/concepts/conversion_table/
 
 """
+from pydantic import BaseModel, ValidationError
+
+
+class Coordinate(BaseModel):
+    x: float
+    y: float
+
+
+c1 = Coordinate(x=1.1, y=-2.2)
+print(c1)  # 출력: x=1.1 y=-2.2
+print("Coordinate.model_fields: ",
+      Coordinate.model_fields)  # 출력: {'x': ModelField(name='x', type=float, required=True), 'y': ModelField(name='y', type=float, required=True)}
+print("type(c1.x): ", type(c1.x))  # 출력: <class 'float'>
+print()
+print("--------------------")
+
+c0 = Coordinate(x=0, y='-2.2')
+print("type(c0.x): ", type(c0.x))  # 출력: <class 'float'>
+print("type(c0.y): ", type(c0.y))  # 출력: <class 'float'>
+print()
+print("--------------------")
+
+
+class Contact(BaseModel):
+    email: str
+
+
+initial_json_data = '''
+{
+    "email": "inewton@principia.com"
+}
+'''
+print("Contact.model_validate_json(initial_json_data): ", Contact.model_validate_json(initial_json_data))
+print()
+print("--------------------")
+
+new_json_data = '''
+{
+    "email": {
+        "personal": "inewton@principia.com",
+        "work": "isaac.newton@themint.com"
+    }
+}
+'''
+try:
+    Contact.model_validate_json(new_json_data)
+except ValidationError as ex:
+    print(ex)
+
+print()
+print("--------------------")
+
+new_data = {
+    "email": {
+        "personal": "inewton@principia.com",
+        "work": "isaac.newton@themint.com"
+    }
+}
+print("Contact(email=str(new_data['email']): ", Contact(email=str(new_data['email'])))
