@@ -14,6 +14,15 @@ Nullable 필드와 Optional 필드가 함께 사용되는 경우가 많다.
 Python 3.10 이전 버전의 Python에서는 OptionaL을 사용하지 않는 것이 좋다.
 - 필드가 Optional 임을 나타내는 것이 아닌 nullable 임을 나타내기 때문이다.
 
+요약 한다면, field 는 다음의 상태를 가질 수 있으며, 각 조합을 검증 측면에서 의미를 알아둘 필요가 있다.
+- 가능한 상태
+  - nullable and not nullable
+  - required and optional
+- 가능한 조합
+  - required and not nullable
+  - required and nullable
+  - optional and not nullable
+  - optional and nullable
 """
 from typing import Optional, Union
 
@@ -100,3 +109,101 @@ class Model(BaseModel):
 
 
 print("Model.model_fields: ", Model.model_fields)
+print()
+print("--------------------")
+
+
+class RequiredAndNotNullableModel(BaseModel):
+    """
+    field를 정의하는 방법의 기본이 되는 방법
+    - field required 이고, 오직 int 형만 가능하다.(Not Nullable)
+    """
+    field: int
+
+
+print()
+
+try:
+    RequiredAndNotNullableModel()
+except ValidationError as ex:
+    print(ex)
+    """
+    1 validation error for RequiredAndNotNullableModel
+    field
+      Field required [type=missing, input_value={}, input_type=dict]
+    """
+
+print()
+
+try:
+    RequiredAndNotNullableModel(field=None)
+except ValidationError as ex:
+    print(ex)
+    """
+    1 validation error for RequiredAndNotNullableModel
+    field
+      none is not an allowed value [type=type_error.none.not_allowed]
+    """
+
+print()
+print("--------------------")
+
+
+class RequiredAndNullableModel(BaseModel):
+    """
+    필드를 필수로 만들기 위해 기본값을 지정하지 않고, 타입 힌팅을 사용하여 None이 가능함을 표현한다.
+    """
+    field: int | None
+
+
+try:
+    RequiredAndNullableModel()
+except ValidationError as ex:
+    print(ex)
+    """
+    1 validation error for RequiredAndNullableModel
+    field
+      Field required [type=missing, input_value={}, input_type=dict]
+    """
+
+print()
+
+print((RequiredAndNullableModel(field=None)))  # 출력: RequiredAndNullableModel field=None
+
+print()
+print("--------------------")
+
+
+class OptionalAndNotNullableModel(BaseModel):
+    """
+    필드가 선택적이지만, None이 아닌 값으로 설정해야 함에 주의한다.(Not Nullable임에도 기본 값을 None으로 설정해도 에러가 발생하지 않는다.)
+
+    """
+    field: int = 0
+
+
+print(OptionalAndNotNullableModel())  # 출력: OptionalAndNotNullableModel field=0
+
+try:
+    OptionalAndNotNullableModel(field=None)
+except ValidationError as ex:
+    print(ex)
+    """
+    1 validation error for OptionalAndNotNullableModel
+    field
+      none is not an allowed value [type=type_error.none.not_allowed]
+    """
+
+print()
+print("--------------------")
+
+
+class OptionalAndNullableModel(BaseModel):
+    """
+    Nullable 필드에 가장 흔히 사용되는 방법이며, None을 default로 지정하여, Optional 필드로 만든다.
+    """
+    field: int | None = None
+
+
+print(OptionalAndNullableModel())  # 출력: OptionalAndNullableModel field=None
+print(OptionalAndNullableModel(field=None))  # 출력: OptionalAndNullableModel field=None
