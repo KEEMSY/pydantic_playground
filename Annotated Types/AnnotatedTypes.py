@@ -86,3 +86,50 @@ except ValidationError as ex:
       Input should be a valid integer, got a number with a fractional part [type=int_from_float, input_value=0.5, input_type=float]
         For further information visit https://errors.pydantic.dev/2.7/v/int_from_float
     """
+
+"""
+[ 핃드 레벨에서 문자열 조작하기 ]
+
+문자열 제약조건을 Field 를 조작함으로써 할 수 있으나, 해당 방법 이외에 모델 수준에서 사용할수 있는 StringConstraints 가 존재한다.
+- StringConstraints: Pydantic에서 제공하는 문자열 제약 조건을 정의하는 클래스
+- 최소길이(혹은 최대 길이), 정규식 패턴만 필요한 경우 Feild를 사용하고, 그 외의 경우 StringConstraints를 사용한다.
+- 공식 문서: https://docs.pydantic.dev/latest/api/types/#pydantic.types.AllowInfNan
+
+
+| 속성           | 자료형                  | 설명                                           |
+|--------------------|----------------------------|----------------------------------------------------|
+| `strip_whitespace` | `bool` \| `None`            | 앞뒤 공백을 제거할지 여부                          |
+| `to_upper`         | `bool` \| `None`            | 문자열을 대문자로 변환할지 여부                    |
+| `to_lower`         | `bool` \| `None`            | 문자열을 소문자로 변환할지 여부                    |
+| `strict`           | `bool` \| `None`            | 문자열을 엄격한 모드에서 검증할지 여부             |
+| `min_length`       | `int` \| `None`             | 문자열의 최소 길이                                 |
+| `max_length`       | `int` \| `None`             | 문자열의 최대 길이                                 |
+| `pattern`          | `str` \| `Pattern[str]` \| `None` | 문자열이 일치해야 하는 정규 표현식 패턴              |
+
+"""
+
+from typing import Annotated
+from pydantic import StringConstraints
+
+StandardString = Annotated[
+    str,
+    StringConstraints(to_lower=True, min_length=2, strip_whitespace=True)
+]
+
+
+class Model(BaseModel):
+    code: StandardString | None = None
+
+
+print(Model(code="ABC   ")) # 출력: code='abc'
+
+try:
+    Model(code="   a   ")
+except ValidationError as ex:
+    print(ex)
+    """
+    1 validation error for Model
+    code
+      String should have at least 2 characters [type=string_too_short, input_value='   a   ', input_type=str]
+        For further information visit https://errors.pydantic.dev/2.7/v/string_too_short
+    """
